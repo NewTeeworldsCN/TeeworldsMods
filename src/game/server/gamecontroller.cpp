@@ -9,6 +9,9 @@
 #include "gamecontroller.h"
 #include "gamecontext.h"
 
+#include <engine/storage.h>
+#include <engine/shared/linereader.h>
+#include <game/server/entities/area-flag.h>
 
 CGameController::CGameController(class CGameContext *pGameServer)
 {
@@ -23,7 +26,7 @@ CGameController::CGameController(class CGameContext *pGameServer)
 	m_SuddenDeath = 0;
 	m_RoundStartTick = Server()->Tick();
 	m_RoundCount = 0;
-	m_GameFlags = GAMEFLAG_FLAGS | GAMEFLAG_TEAMS;
+	m_GameFlags = GAMEFLAG_TEAMS;
 	m_aTeamscore[TEAM_RED] = 0;
 	m_aTeamscore[TEAM_BLUE] = 0;
 	m_aMapWish[0] = 0;
@@ -34,6 +37,18 @@ CGameController::CGameController(class CGameContext *pGameServer)
 	m_aNumSpawnPoints[0] = 0;
 	m_aNumSpawnPoints[1] = 0;
 	m_aNumSpawnPoints[2] = 0;
+
+	LoadFlags();
+    m_Mode = g_Config.m_CPControlMode;
+    m_NumFlag = 0;
+    for (int i = 0; i < (int)m_AreaFlagInfo.size(); i++)
+    {
+        if (m_Mode == MODE_SCORE2WIN && m_AreaFlagInfo[i].m_PointEarnPerSec == 0)
+            continue;
+        new CAreaFlag(&GameServer()->m_World, m_AreaFlagInfo[i].m_LowerPos, m_AreaFlagInfo[i].m_UpperPos, m_AreaFlagInfo[i].m_MaxProgress,
+                      m_AreaFlagInfo[i].m_PointEarnPerSec, m_AreaFlagInfo[i].m_Radius);
+        m_NumFlag++;
+    }
 }
 
 CGameController::~CGameController()
@@ -569,6 +584,43 @@ void CGameController::Tick()
 	}
 
 	DoWincheck();
+
+	int aScore[2];
+    aScore[TEAM_RED] = 0;
+    aScore[TEAM_BLUE] = 0;
+    for (CAreaFlag *Flag = (CAreaFlag *)GameServer()->m_World.FindFirst(CGameWorld::ENTTYPE_AREA_FLAG); Flag; Flag = (CAreaFlag *)Flag->TypeNext())
+    {
+        if (g_Config.m_CPControlMode == MODE_CONTROL_ALL)
+        {
+            if (Flag->GetProgress() < 0)
+                aScore[TEAM_RED] += abs(Flag->GetProgress());
+            if (Flag->GetProgress() > 0)
+                aScore[TEAM_BLUE] += abs(Flag->GetProgress());
+            m_aTeamscore[TEAM_RED] = aScore[TEAM_RED];
+            m_aTeamscore[TEAM_BLUE] = aScore[TEAM_BLUE];
+        }
+        else if (g_Config.m_CPControlMode == MODE_SCORE2WIN)
+        {
+            if (Server()->Tick() % 50 == 0)
+            {
+                int Score = ceil((float)abs(Flag->GetProgress())) / ((float)Flag->GetMaxProgress()) / ((float)Flag->GetPointEarnPerSec());
+                if (Flag->GetProgress() < 0)
+                    m_aTeamscore[TEAM_RED] += Score;
+                if (Flag->GetProgress() > 0)
+                    m_aTeamscore[TEAM_BLUE] += Score;
+            }
+        }
+    }
+
+    if (m_Mode == MODE_SCORE2WIN)
+        g_Config.m_SvScorelimit = m_NumFlag * 240;
+    else
+    {
+        float Score = 0;
+        for (int i = 0; i < (int)m_AreaFlagInfo.size(); i++)
+            Score += m_AreaFlagInfo[i].m_MaxProgress;
+        g_Config.m_SvScorelimit = round_to_int(((int)m_AreaFlagInfo.size() * 240) * (float)(g_Config.m_CPPercentToWinGame / 100.f));
+    }
 }
 
 
@@ -579,6 +631,17 @@ bool CGameController::IsTeamplay() const
 
 void CGameController::Snap(int SnappingClient)
 {
+	if(IsTeamplay())
+	{
+		CNetObj_GameData *pGameData = (CNetObj_GameData *)Server()->SnapNewItem(NETOBJTYPE_GAMEDATA, 0, sizeof(CNetObj_GameData));
+		if(!pGameData)
+			return;
+
+		pGameData->m_TeamscoreRed = m_aTeamscore[TEAM_RED];
+		pGameData->m_TeamscoreBlue = m_aTeamscore[TEAM_BLUE];
+		pGameData->m_FlagCarrierBlue = pGameData->m_FlagCarrierRed = -1;
+	}
+
 	CNetObj_GameInfo *pGameInfoObj = (CNetObj_GameInfo *)Server()->SnapNewItem(NETOBJTYPE_GAMEINFO, 0, sizeof(CNetObj_GameInfo));
 	if(!pGameInfoObj)
 		return;
@@ -762,4 +825,45 @@ int CGameController::ClampTeam(int Team)
 	if(IsTeamplay())
 		return Team&1;
 	return 0;
+}
+
+void CGameController::LoadFlags()
+{
+    char aFilename[512];
+    str_format(aFilename, sizeof(aFilename), "maps/%s.cfg", g_Config.m_SvMap);
+
+    // read file data into buffer
+    IOHANDLE File = GameServer()->Storage()->OpenFile(aFilename, IOFLAG_READ, IStorage::TYPE_ALL);
+    if (File)
+    {
+        CLineReader LineReader;
+        LineReader.Init(File);
+        const char *pLine;
+        while ((pLine = LineReader.Get()))
+        {
+            if (!str_comp_num(pLine, "flag", 4))
+            {
+                int Point = 0, Radius = 0;
+                int MaxProgress = g_Config.m_CPMaxProgress;
+                vec2 Pos0, Pos1;
+                if (sscanf(pLine, "flag t%d p%d lx%f ly%f ux%f uy%f r%d", &MaxProgress, &Point, &Pos0.x, &Pos0.y, &Pos1.x, &Pos1.y, &Radius))
+                {
+                    CAreaFlagInfo Temp;
+                    Temp.m_PointEarnPerSec = Point;
+                    Temp.m_LowerPos = vec2(Pos0.x * 32 + 32, Pos0.y * 32 + 32);
+                    Temp.m_UpperPos = vec2(Pos1.x * 32 + 32, Pos1.y * 32 + 32);
+                    Temp.m_MaxProgress = MaxProgress;
+					Temp.m_Radius = Radius;
+                    m_AreaFlagInfo.push_back(Temp);
+                }
+            }
+            if (!str_comp_num(pLine, "cmd", 3))
+            {
+                char aBuf[256];
+                sscanf(pLine, "cmd \"%s\"", aBuf);
+                GameServer()->Console()->ExecuteLine(aBuf, -1);
+            }
+        }
+        io_close(File);
+    }
 }

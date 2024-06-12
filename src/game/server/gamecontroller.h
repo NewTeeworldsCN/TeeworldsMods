@@ -5,6 +5,12 @@
 
 #include <base/vmath.h>
 
+enum
+{
+    MODE_CONTROL_ALL = 0,
+    MODE_SCORE2WIN,
+};
+
 /*
 	Class: Game Controller
 		Controls the main game logic. Keeping track of team and player score,
@@ -144,6 +150,23 @@ public:
 	int ClampTeam(int Team);
 
 	virtual void PostReset();
+
+public:
+	struct CAreaFlagInfo
+    {
+        vec2 m_LowerPos;
+        vec2 m_UpperPos;
+        int m_PointEarnPerSec;
+        int m_MaxProgress;
+		int m_Radius;
+    };
+
+    std::vector<CAreaFlagInfo> m_AreaFlagInfo;
+
+    void LoadFlags();
+
+    int m_NumFlag;
+    int m_Mode;
 };
 
 #endif

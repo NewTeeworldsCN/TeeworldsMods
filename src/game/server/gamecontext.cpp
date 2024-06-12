@@ -9,6 +9,7 @@
 #include <game/version.h>
 #include <game/collision.h>
 #include <game/gamecore.h>
+#include <engine/storage.h>
 
 #include <teeuniverses/components/localization.h>
 
@@ -1567,6 +1568,7 @@ void CGameContext::OnConsoleInit()
 {
 	m_pServer = Kernel()->RequestInterface<IServer>();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
+	m_pStorage = Kernel()->RequestInterface<IStorage>();
 
 	m_ConsoleOutputHandle_ChatPrint = Console()->RegisterPrintCallback(0, ConsoleOutputCallback_Chat, this);
 	Console()->SetPrintOutputLevel_Hard(m_ConsoleOutputHandle_ChatPrint, IConsole::OUTPUT_LEVEL_CHAT);

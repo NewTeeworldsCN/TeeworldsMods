@@ -42,6 +42,7 @@ class CGameContext : public IGameServer
 {
 	IServer *m_pServer;
 	class IConsole *m_pConsole;
+	class IStorage *m_pStorage;
 	CLayers m_Layers;
 	CCollision m_Collision;
 	CNetObjHandler m_NetObjHandler;
@@ -80,8 +81,9 @@ class CGameContext : public IGameServer
 	int m_ConsoleOutput_Target;
 	
 public:
-	IServer *Server() const { return m_pServer; }
 	class IConsole *Console() { return m_pConsole; }
+	class IStorage *Storage() { return m_pStorage; }
+	IServer *Server() const { return m_pServer; }
 	CCollision *Collision() { return &m_Collision; }
 	CTuningParams *Tuning() { return &m_Tuning; }
 
