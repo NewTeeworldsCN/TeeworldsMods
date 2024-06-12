@@ -1,3 +1,24 @@
+CK - (JDC110 FHKC1010 JH10 JEL111)
+=========
+
+The beginning of the story
+--------------------------
+
+Two years ago, Ninecloud2077 and I created a mod called CK, inspired 
+from the Battle mod. At that time, I was still young and had poor coding 
+skills, so I wrote a bunch of shit. Now, I want to rewrite it and continue 
+updating it. By the way, I still don't know what is CK mean, I use 
+this name because I don't know how to name, so I type randomly on my 
+keyboard.
+I think CK can be anything, such as memories of the past or a desire for
+the future..
+To our thirst for the future.
+
+About
+-----
+
+This mod is a start, I want start JEL111 Project from this mod.
+
 Teeworlds
 =========
 
