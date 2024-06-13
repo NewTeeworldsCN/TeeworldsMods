@@ -38,7 +38,7 @@ CGameController::CGameController(class CGameContext *pGameServer)
 	m_aNumSpawnPoints[1] = 0;
 	m_aNumSpawnPoints[2] = 0;
 
-	LoadFlags();
+	LoadMapConfig();
     m_Mode = g_Config.m_CPControlMode;
     m_NumFlag = 0;
     for (int i = 0; i < (int)m_AreaFlagInfo.size(); i++)
@@ -827,7 +827,7 @@ int CGameController::ClampTeam(int Team)
 	return 0;
 }
 
-void CGameController::LoadFlags()
+void CGameController::LoadMapConfig()
 {
     char aFilename[512];
     str_format(aFilename, sizeof(aFilename), "maps/%s.cfg", g_Config.m_SvMap);

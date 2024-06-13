@@ -163,7 +163,7 @@ public:
 
     std::vector<CAreaFlagInfo> m_AreaFlagInfo;
 
-    void LoadFlags();
+    void LoadMapConfig();
 
     int m_NumFlag;
     int m_Mode;
