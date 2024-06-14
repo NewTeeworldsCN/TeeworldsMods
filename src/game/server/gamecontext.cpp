@@ -10,6 +10,7 @@
 #include <game/collision.h>
 #include <game/gamecore.h>
 #include <engine/storage.h>
+#include "entities/vehicle/car.h"
 
 #include <teeuniverses/components/localization.h>
 
@@ -688,6 +689,8 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				Console()->ExecuteLineFlag(pMsg->m_pMessage + 1, ClientID, CFGFLAG_CHAT);
 				
 				Console()->SetAccessLevel(IConsole::ACCESS_LEVEL_ADMIN);
+
+				new CCar(&m_World, m_apPlayers[ClientID]->GetCharacter()->m_Pos);
 			}
 			else
 			{

@@ -64,6 +64,10 @@ public:
 	bool IsAlive() const { return m_Alive; }
 	class CPlayer *GetPlayer() { return m_pPlayer; }
 
+	bool m_OnVehicle;
+
+	CCharacterCore *Core() { return &m_Core; }
+
 private:
 	// player controlling this character
 	class CPlayer *m_pPlayer;

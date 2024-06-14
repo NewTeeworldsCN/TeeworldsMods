@@ -24,6 +24,7 @@ public:
 		ENTTYPE_FLAG,
 		ENTTYPE_CHARACTER,
 		ENTTYPE_AREA_FLAG,
+		ENTTYPE_CAR,
 		NUM_ENTTYPES
 	};
 
@@ -97,7 +98,7 @@ public:
 		Returns:
 			Returns a pointer to the closest CCharacter or NULL if no CCharacter is close enough.
 	*/
-	class CCharacter *ClosestCharacter(vec2 Pos, float Radius, CEntity *ppNotThis);
+	class CCharacter *ClosestCharacter(vec2 Pos, float Radius, CEntity *ppNotThis, bool IncludeOnVehicle = true);
 
 	/*
 		Function: insert_entity

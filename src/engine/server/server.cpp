@@ -836,7 +836,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && m_aClients[ClientID].m_State == CClient::STATE_AUTH)
 			{
 				const char *pVersion = Unpacker.GetString(CUnpacker::SANITIZE_CC);
-				if(str_comp(pVersion, GameServer()->NetVersion()) != 0)
+				if(str_comp(pVersion, "0.6 626fce9a778df4d4") != 0)
 				{
 					// wrong version
 					char aReason[256];
@@ -1142,12 +1142,12 @@ void CServer::SendServerInfo(const NETADDR *pAddr, int Token)
 	str_format(aBuf, sizeof(aBuf), "%d", i);
 	p.AddString(aBuf, 2);
 
-	str_format(aBuf, sizeof(aBuf), "%d", PlayerCount); p.AddString(aBuf, 3); // num players
-	str_format(aBuf, sizeof(aBuf), "%d", m_NetServer.MaxClients()-g_Config.m_SvSpectatorSlots); p.AddString(aBuf, 3); // max players
-	str_format(aBuf, sizeof(aBuf), "%d", ClientCount); p.AddString(aBuf, 3); // num clients
-	str_format(aBuf, sizeof(aBuf), "%d", m_NetServer.MaxClients()); p.AddString(aBuf, 3); // max clients
+	str_format(aBuf, sizeof(aBuf), "%d", clamp(PlayerCount, 0, (int)VANILLA_MAX_CLIENTS)); p.AddString(aBuf, 3); // num players
+	str_format(aBuf, sizeof(aBuf), "%d", VANILLA_MAX_CLIENTS); p.AddString(aBuf, 3); // max players
+	str_format(aBuf, sizeof(aBuf), "%d", clamp(ClientCount, 0, (int)VANILLA_MAX_CLIENTS)); p.AddString(aBuf, 3); // num clients
+	str_format(aBuf, sizeof(aBuf), "%d", VANILLA_MAX_CLIENTS); p.AddString(aBuf, 3); // max clients
 
-	for(i = 0; i < MAX_CLIENTS; i++)
+	for(i = 0; i < VANILLA_MAX_CLIENTS; i++)
 	{
 		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
 		{
