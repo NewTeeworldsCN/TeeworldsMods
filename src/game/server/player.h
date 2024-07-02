@@ -7,6 +7,8 @@
 #include "entities/character.h"
 #include "gamecontext.h"
 
+#include "playerdata.h"
+
 // player object
 class CPlayer
 {
@@ -100,6 +102,8 @@ public:
 	} m_Latency;
 
 	int m_Authed;
+
+	SPlayerData m_AccData;
 
 private:
 	CCharacter *m_pCharacter;
